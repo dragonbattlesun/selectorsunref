@@ -24,7 +24,7 @@ def header_protocol_selectors(file_path):
     if not os.path.isfile(file_path):
         return None
     protocol_sels = set()
-    file = open(file_path, 'r')
+    file = open(file_path, 'r',encoding='UTF-8',errors='ignore')
     is_protocol_area = False
     for line in file.readlines():
         #delete description
@@ -53,7 +53,7 @@ def header_protocol_selectors(file_path):
 
 
 def protocol_selectors(path):
-    print 'Get protocol selectors...'
+    print('Get protocol selectors...')
     header_files = set()
     protocol_sels = set()
     system_base_dir = '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk'
@@ -69,7 +69,7 @@ def protocol_selectors(path):
                 header_files = header_files.union(os.popen('find %s -name \"*.h\"' % library_dir).readlines())
 
     project_dir = '/'.join(sys.path[0].strip().split('/')[0:-1])
-    project_dir = raw_input('Please input project dir\nFor example:/Users/yuencong/workplace/xxx\n').strip()
+    project_dir =input('Please input project dir\nFor example:/Users/yuencong/workplace/xxx\n').strip()
     if not os.path.isdir(project_dir):
         exit('Error: project path error')
     header_files = header_files.union(os.popen('find %s -name \"*.h\"' % project_dir).readlines())
@@ -81,7 +81,7 @@ def protocol_selectors(path):
 
 
 def imp_selectors(path):
-    print 'Get imp selectors...'
+    print('Get imp selectors...')
     #return struct: {'setupHeaderShadowView':['-[TTBaseViewController setupHeaderShadowView]']}
     re_sel_imp = re.compile('\s*imp 0x\w+ ([+|-]\[.+\s(.+)\])')
     re_properties_start = re.compile('\s*baseProperties 0x\w{9}')
@@ -89,7 +89,7 @@ def imp_selectors(path):
     re_property = re.compile('\s*name 0x\w+ (.+)')
     imp_sels = {}
     is_properties_area = False
-    for line in os.popen('/usr/bin/otool -oV %s' % path).xreadlines():
+    for line in os.popen('/usr/bin/otool -oV %s' % path).readlines():
         results = re_sel_imp.findall(line)
         if results:
             (class_sel, sel) = results[0]
@@ -117,7 +117,7 @@ def imp_selectors(path):
 
 
 def ref_selectors(path):
-    print 'Get ref selectors...'
+    print ('Get ref selectors...')
     re_selrefs = re.compile('__TEXT:__objc_methname:(.+)')
     ref_sels = set()
     lines = os.popen('/usr/bin/otool -v -s __DATA __objc_selrefs %s' % path).readlines()
@@ -164,15 +164,15 @@ def unref_selectors(path):
 
 
 if __name__ == '__main__':
-    path = raw_input('Please input app path\nFor example:/Users/yuencong/Library/Developer/Xcode/DerivedData/xxx/Build/Products/Dev-iphoneos/xxx.app\n').strip()
+    path =input('Please input app path\nFor example:/Users/yuencong/Library/Developer/Xcode/DerivedData/xxx/Build/Products/Dev-iphoneos/xxx.app\n').strip()
     path = verified_app_path(path)
-    if not path:
+    if not os.path.exists(path):
         exit('Error: invalid app path')
     unref_sels = unref_selectors(path)
     f = open(os.path.join(sys.path[0].strip(), 'selectorunrefs.txt'), 'w')
     f.write('selectorunrefs count: %d\n' % len(unref_sels))
     for unref_sel in unref_sels:
-        print 'unref selector: %s' % unref_sel
+        print('unref selector: %s' % unref_sel)
         f.write(unref_sel + '\n')
     f.close()
     print('Done! %d selectors is unreferenced, selectorunref.txt has already stored in script dir.' % len(unref_sels))
